@@ -17,15 +17,13 @@ const Register = () => {
     setLoading(true);
 
     // 1. Foydalanuvchini Auth tizimiga qo‘shamiz
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp(
-      {
-        email,
-        password,
-        options: {
-          data: { nickname }, // user_metadata ga nickname yoziladi
-        },
-      }
-    );
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { nickname }, // user_metadata ga nickname yoziladi
+      },
+    });
 
     if (signUpError) {
       setError(signUpError.message);
