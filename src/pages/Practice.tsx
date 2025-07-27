@@ -25,10 +25,16 @@ const Practice = () => {
   // So‘zni va harflarni o‘qib berish
   const playAudio = async (word: string) => {
     setSpeaking(true);
+
+    // Butun so'zni aytish
     await speak(word, 1200);
+
+    // Har bir harfni aytish
     for (let letter of word) {
-      await speak(letter.toUpperCase(), 400);
+      // faqat harfni o'qitish, upperCase emas!
+      await speak(letter, 10);
     }
+
     setSpeaking(false);
   };
 
