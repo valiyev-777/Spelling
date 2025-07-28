@@ -109,6 +109,7 @@ const Practice = () => {
         correct_count: prevCorrect + (isCorrect ? 1 : 0),
         wrong_count: prevWrong + (isCorrect ? 0 : 1),
         last_practice_at: new Date().toISOString(),
+        most_mistaken_letter: mistakes,
       })
       .eq("id", userId);
 

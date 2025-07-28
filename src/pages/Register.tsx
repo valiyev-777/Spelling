@@ -16,14 +16,10 @@ const Register = () => {
     setError("");
     setLoading(true);
 
-    // 1. Foydalanuvchini Auth tizimiga qo‘shamiz
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: { nickname }, // user_metadata ga nickname yoziladi
-        emailRedirectTo: "https://spelling-tau.vercel.app/confirm", // 🔁 Shu yerga redirect qiladi
-      },
+      options: { data: { nickname } },
     });
 
     if (signUpError) {
@@ -32,36 +28,12 @@ const Register = () => {
       return;
     }
 
-    // 2. Agar foydalanuvchi session bilan qaytsa — avtomatik login bo‘lgan
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !userData?.user) {
-      setLoading(false);
-      setError("Check your email to confirm your account before logging in.");
-      return;
-    }
-
-    const user = userData.user;
-
-    // 3. public.users jadvaliga qo‘shish (agar trigger yo‘q bo‘lsa)
-    const { error: insertError } = await supabase.from("users").insert([
-      {
-        id: user.id,
-        email: user.email,
-        nickname,
-        correct_count: 0,
-        wrong_count: 0,
-        most_mistaken_letter: "-",
-      },
-    ]);
-
-    if (insertError) {
-      setError("Auth created, but DB insert failed: " + insertError.message);
+    if (!data.session) {
+      setError("Check your email and confirm before logging in.");
       setLoading(false);
       return;
     }
 
-    // 4. Dashboardga o‘tkazish
     navigate("/dashboard");
   };
 

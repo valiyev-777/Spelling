@@ -19,40 +19,24 @@ const Login = () => {
       email,
       password,
     });
-
     setLoading(false);
 
     if (loginError) {
-      setError(loginError.message);
+      if (loginError.message.includes("Email not confirmed")) {
+        setError("Please confirm your email first.");
+      } else setError(loginError.message);
       return;
     }
 
-    if (data?.session) {
-      const user = data.session.user;
-
-      // Check if user exists in 'users' table
-      const { data: existing } = await supabase
-        .from("users")
-        .select("id")
-        .eq("id", user.id)
-        .single();
-
-      if (!existing) {
-        // Insert new user if not exists
-        await supabase.from("users").insert([
-          {
-            id: user.id, // Supabase Auth user ID
-            email: user.email,
-            nickname: user.user_metadata?.nickname || "", // fallback if no nickname
-            correct_count: 0,
-            wrong_count: 0,
-          },
-        ]);
-      }
-
+    if (data.session) {
+      await supabase.from("users").upsert({
+        id: data.session.user.id,
+        email: email,
+        nickname: data.session.user.user_metadata?.nickname ?? "",
+      });
       navigate("/dashboard");
     } else {
-      setError("Login successful, but session not found.");
+      setError("Login successful, but session missing.");
     }
   };
 
