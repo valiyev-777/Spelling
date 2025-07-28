@@ -9,6 +9,7 @@ import RequireAuth from "./components/RequireAuth";
 import Profile from "./pages/Profile";
 import Leaderboard from "./pages/Leaderboard";
 import Practice from "./pages/Practice";
+import Confirm from "./pages/Confirm";
 // import Practice from "./pages/Practice";
 // import Leaderboard from "./pages/Leaderboard";
 
@@ -21,6 +22,7 @@ function App() {
         <Route index element={<Landing />} />
         <Route path="sign-in" element={<Login />} />
         <Route path="sign-up" element={<Register />} />
+        <Route path="/confirm" element={<Confirm />} />
 
         {/* Protected routes */}
         <Route

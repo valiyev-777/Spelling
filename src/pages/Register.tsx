@@ -22,6 +22,7 @@ const Register = () => {
       password,
       options: {
         data: { nickname }, // user_metadata ga nickname yoziladi
+        emailRedirectTo: "https://spelling-tau.vercel.app/confirm", // 🔁 Shu yerga redirect qiladi
       },
     });
 
