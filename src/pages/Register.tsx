@@ -12,61 +12,89 @@ const Register = () => {
 
   const navigate = useNavigate();
 
+  const getURL = () => {
+    let url =
+      process?.env?.NEXT_PUBLIC_SITE_URL ??
+      // Set this to your site URL in production env.
+      process?.env?.NEXT_PUBLIC_VERCEL_URL ??
+      // Automatically set by Vercel.
+      "http://localhost:3000/";
+
+    // Make sure to include `https://` when not localhost.
+    url = url.startsWith("http") ? url : `https://${url}`;
+
+    // Make sure to include a trailing `/`.
+    url = url.endsWith("/") ? url : `${url}/`;
+
+    return url;
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess("");
     setLoading(true);
 
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: "https://spelling-tau.vercel.app/confirm", // ✅ https
-        data: { nickname },
-      },
-    });
+    try {
+      // Validate inputs before submission
+      if (!email || !password || !nickname) {
+        throw new Error("Please fill in all fields");
+      }
 
-    if (signUpError) {
-      setError(signUpError.message);
-      setLoading(false);
-      return;
-    }
+      // Get dynamic URL using the getURL function
+      const dynamicRedirectUrl = `${getURL()}confirm`;
 
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+      // Sign up with Supabase
+      const { data: signUpData, error: signUpError } =
+        await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: dynamicRedirectUrl,
+            data: { nickname },
+          },
+        });
 
-    if (userError || !userData?.user) {
-      setSuccess("Account created! Please check your email to confirm.");
-      setLoading(false);
-      return;
-    }
+      // Handle signup errors
+      if (signUpError) throw signUpError;
 
-    const user = userData.user;
+      // Check if user needs email confirmation
+      if (signUpData.user?.identities?.length === 0) {
+        setSuccess("Account created! Please check your email to confirm.");
+        setLoading(false);
+        return;
+      }
 
-    const { error: insertError } = await supabase
-      .from("users")
-      .insert([
-        {
-          id: user.id,
-          email: user.email,
+      // If user is immediately available, insert user data
+      if (signUpData.user) {
+        const { error: insertError } = await supabase.from("users").insert({
+          id: signUpData.user.id,
+          email: signUpData.user.email,
           nickname,
           correct_count: 0,
           wrong_count: 0,
           score: 0,
           most_mistaken_letter: "-",
-        },
-      ])
-      .select();
+        });
 
-    if (insertError && !insertError.message.includes("duplicate key")) {
-      setError("Auth success, but DB insert failed: " + insertError.message);
+        if (insertError) {
+          // Handle potential duplicate key or other insert errors
+          if (!insertError.message.includes("duplicate key")) {
+            throw insertError;
+          }
+        }
+
+        // Navigate to dashboard on successful signup and insert
+        navigate("/dashboard");
+      }
+    } catch (error: any) {
+      // Centralized error handling
+      setError(error.message || "An unexpected error occurred");
+    } finally {
+      // Ensure loading is set to false
       setLoading(false);
-      return;
     }
-
-    navigate("/dashboard");
   };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300 px-4">
       <form
