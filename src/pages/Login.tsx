@@ -15,45 +15,18 @@ const Login = () => {
     setError("");
     setLoading(true);
 
-    const { data, error: loginError } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    setLoading(false);
-
-    if (loginError) {
-      setError(loginError.message);
+    if (error) {
+      setError(error.message);
       return;
     }
 
-    if (data?.session) {
-      const user = data.session.user;
-
-      // Check if user exists in 'users' table
-      const { data: existing } = await supabase
-        .from("users")
-        .select("id")
-        .eq("id", user.id)
-        .single();
-
-      if (!existing) {
-        // Insert new user if not exists
-        await supabase.from("users").insert([
-          {
-            id: user.id, // Supabase Auth user ID
-            email: user.email,
-            nickname: user.user_metadata?.nickname || "", // fallback if no nickname
-            correct_count: 0,
-            wrong_count: 0,
-          },
-        ]);
-      }
-
-      navigate("/dashboard");
-    } else {
-      setError("Login successful, but session not found.");
-    }
+    // Kirishdan keyin dashboard yoki boshqa sahifaga
+    navigate("/dashboard");
   };
 
   return (

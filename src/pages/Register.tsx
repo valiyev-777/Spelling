@@ -1,4 +1,3 @@
-// src/pages/Register.tsx
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
@@ -8,24 +7,25 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [nickname, setNickname] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setLoading(true);
 
-    // 1. Foydalanuvchini Auth tizimiga qo‘shamiz
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp(
-      {
-        email,
-        password,
-        options: {
-          data: { nickname }, // user_metadata ga nickname yoziladi
-        },
-      }
-    );
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: "https://spelling-tau.vercel.app/confirm", // ✅ https
+        data: { nickname },
+      },
+    });
 
     if (signUpError) {
       setError(signUpError.message);
@@ -33,58 +33,65 @@ const Register = () => {
       return;
     }
 
-    // 2. Agar foydalanuvchi session bilan qaytsa — avtomatik login bo‘lgan
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
     if (userError || !userData?.user) {
+      setSuccess("Account created! Please check your email to confirm.");
       setLoading(false);
-      setError("Check your email to confirm your account before logging in.");
       return;
     }
 
     const user = userData.user;
 
-    // 3. public.users jadvaliga qo‘shish (agar trigger yo‘q bo‘lsa)
-    const { error: insertError } = await supabase.from("users").insert([
-      {
-        id: user.id,
-        email: user.email,
-        nickname,
-        correct_count: 0,
-        wrong_count: 0,
-        most_mistaken_letter: "-",
-      },
-    ]);
+    const { error: insertError } = await supabase
+      .from("users")
+      .insert([
+        {
+          id: user.id,
+          email: user.email,
+          nickname,
+          correct_count: 0,
+          wrong_count: 0,
+          score: 0,
+          most_mistaken_letter: "-",
+        },
+      ])
+      .select();
 
-    if (insertError) {
-      setError("Auth created, but DB insert failed: " + insertError.message);
+    if (insertError && !insertError.message.includes("duplicate key")) {
+      setError("Auth success, but DB insert failed: " + insertError.message);
       setLoading(false);
       return;
     }
 
-    // 4. Dashboardga o‘tkazish
     navigate("/dashboard");
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300 px-4">
       <form
         onSubmit={handleRegister}
-        className="bg-white shadow-md p-8 rounded-xl max-w-md w-full space-y-5"
+        className="bg-white shadow-2xl p-8 rounded-xl max-w-md w-full space-y-6 border border-blue-200"
       >
-        <h2 className="text-3xl font-extrabold text-center text-blue-700">
-          Register
+        <h2 className="text-3xl font-bold text-center text-blue-700">
+          Create Account
         </h2>
 
         {error && (
-          <p className="text-red-500 text-sm text-center bg-red-100 rounded p-2">
+          <div className="text-red-600 text-sm bg-red-100 p-3 rounded shadow">
             {error}
-          </p>
+          </div>
+        )}
+
+        {success && (
+          <div className="text-green-700 text-sm bg-green-100 p-3 rounded shadow">
+            {success}
+          </div>
         )}
 
         <input
           type="text"
-          placeholder="Nickname"
+          placeholder="Your Nickname"
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
           className="w-full border p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -93,7 +100,7 @@ const Register = () => {
 
         <input
           type="email"
-          placeholder="Email"
+          placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="w-full border p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -112,10 +119,20 @@ const Register = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 transition disabled:opacity-50"
+          className="w-full bg-blue-600 text-white py-3 rounded font-semibold hover:bg-blue-700 transition disabled:opacity-50"
         >
-          {loading ? "Creating account..." : "Sign Up"}
+          {loading ? "Creating..." : "Sign Up"}
         </button>
+
+        <p className="text-center text-sm text-gray-500">
+          Already have an account?{" "}
+          <a
+            href="/sign-in"
+            className="text-blue-600 hover:underline font-medium"
+          >
+            Login
+          </a>
+        </p>
       </form>
     </div>
   );
