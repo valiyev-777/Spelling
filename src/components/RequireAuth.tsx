@@ -1,10 +1,9 @@
 // src/components/RequireAuth.tsx
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import type { ReactNode } from "react";
 
 interface Props {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 const RequireAuth = ({ children }: Props) => {
