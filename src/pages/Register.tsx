@@ -29,14 +29,14 @@ const Register = () => {
         throw new Error("Please fill in all fields");
       }
 
-      const redirectUrl = `${getURL()}/confirm`;
+      // const redirectUrl = `${getURL()}/confirm`;
 
       const { data: signUpData, error: signUpError } =
         await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: redirectUrl,
+            emailRedirectTo: `${getURL()}/confirm`,
             data: { nickname }, // Supabase metadata
           },
         });

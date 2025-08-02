@@ -1,33 +1,52 @@
 // src/pages/Confirm.tsx
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabase";
 
 const Confirm = () => {
-  const [message, setMessage] = useState("⏳ Confirming your email...");
+  const [message, setMessage] = useState("⏳ Verifying your email...");
   const navigate = useNavigate();
 
   useEffect(() => {
-    const confirm = async () => {
-      const url = window.location.href;
+    const confirmEmail = async () => {
+      try {
+        const url = new URL(window.location.href);
+        const hash = url.hash;
 
-      const { error } = await supabase.auth.exchangeCodeForSession(url);
+        // Agar redirect URL'da hash (#access_token=...) bo'lsa — uni Supabase o'zi qo'ygan bo'ladi
+        if (hash && hash.includes("access_token")) {
+          const queryParams = new URLSearchParams(hash.substring(1));
+          const access_token = queryParams.get("access_token");
+          const refresh_token = queryParams.get("refresh_token");
 
-      if (error) {
-        console.error("Confirmation error:", error);
+          if (access_token && refresh_token) {
+            const { error } = await supabase.auth.setSession({
+              access_token,
+              refresh_token,
+            });
+
+            if (error) {
+              setMessage("❌ Failed to confirm email: " + error.message);
+              return;
+            }
+
+            setMessage("✅ Email confirmed! Redirecting...");
+            setTimeout(() => navigate("/dashboard"), 2000);
+            return;
+          }
+        }
+
         setMessage("❌ Invalid or expired token. Please try again.");
-        return;
+      } catch (err) {
+        setMessage("❌ Unexpected error occurred.");
       }
-
-      setMessage("✅ Email confirmed! Redirecting to dashboard...");
-      setTimeout(() => navigate("/dashboard"), 2000);
     };
 
-    confirm();
+    confirmEmail();
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white text-xl text-blue-600 font-semibold">
+    <div className="min-h-screen flex items-center justify-center text-xl font-medium text-blue-700">
       {message}
     </div>
   );
