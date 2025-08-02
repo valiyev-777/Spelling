@@ -1,7 +1,6 @@
 // src/pages/Register.tsx
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
-// import { useNavigate } from "react-router-dom";
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -11,11 +10,12 @@ const Register = () => {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Dinamik URL (dev/prod farqlaydi)
   const getURL = () => {
     if (typeof window !== "undefined") {
       return window.location.origin;
     }
-    return "https://spelling-tau.vercel.app";
+    return "https://spelling-tau.vercel.app"; // Default prod URL
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -37,18 +37,19 @@ const Register = () => {
           password,
           options: {
             emailRedirectTo: redirectUrl,
-            data: { nickname },
+            data: { nickname }, // Supabase metadata
           },
         });
 
       if (signUpError) throw signUpError;
 
-      if (signUpData.user?.identities?.length === 0) {
-        setSuccess("Account created! Please check your email to confirm.");
+      // Agar confirmation yoqilgan bo‘lsa — session bo‘lmaydi
+      if (!signUpData.session) {
+        setSuccess("✅ Account created! Please check your email to confirm.");
         return;
       }
 
-      setSuccess("Unexpected: Account created without confirmation.");
+      setSuccess("✅ Account created and logged in.");
     } catch (error: any) {
       setError(error.message || "An unexpected error occurred");
     } finally {
@@ -66,15 +67,23 @@ const Register = () => {
           Create Account
         </h2>
 
-        {error && <div className="text-red-600">{error}</div>}
-        {success && <div className="text-green-700">{success}</div>}
+        {error && (
+          <div className="text-red-600 text-center bg-red-100 rounded p-2">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="text-green-700 text-center bg-green-100 rounded p-2">
+            {success}
+          </div>
+        )}
 
         <input
           type="text"
           placeholder="Your Nickname"
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
-          className="w-full border p-3 rounded"
+          className="w-full border p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
           required
         />
 
@@ -83,7 +92,7 @@ const Register = () => {
           placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full border p-3 rounded"
+          className="w-full border p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
           required
         />
 
@@ -92,14 +101,14 @@ const Register = () => {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full border p-3 rounded"
+          className="w-full border p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
           required
         />
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700"
+          className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 transition disabled:opacity-50"
         >
           {loading ? "Creating..." : "Sign Up"}
         </button>

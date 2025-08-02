@@ -1,30 +1,37 @@
 // src/pages/Confirm.tsx
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
 const Confirm = () => {
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("Confirming...");
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session?.user) {
-        navigate("/dashboard");
-      } else {
-        navigate("/sign-in");
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_IN" && session?.user) {
+          setMessage("Email confirmed! Redirecting...");
+          setTimeout(() => navigate("/dashboard"), 1500);
+        } else if (event === "PASSWORD_RECOVERY") {
+          setMessage("Password recovery.");
+        } else {
+          setError("Invalid or expired token. Please try again.");
+        }
       }
-    };
+    );
 
-    checkUser();
-  }, [navigate]);
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   return (
-    <div className="min-h-screen flex justify-center items-center text-blue-700 text-xl">
-      Confirming your account...
+    <div className="min-h-screen flex items-center justify-center p-4 bg-white text-center">
+      <div className="text-xl text-gray-800">
+        {error ? <p className="text-red-600">{error}</p> : <p>{message}</p>}
+      </div>
     </div>
   );
 };
