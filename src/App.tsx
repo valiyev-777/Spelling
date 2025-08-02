@@ -22,8 +22,8 @@ function App() {
         <Route index element={<Landing />} />
         <Route path="sign-in" element={<Login />} />
         <Route path="sign-up" element={<Register />} />
-        <Route path="/confirm/*" element={<Confirm />} />
-
+        <Route path="/confirm" element={<Confirm />} />
+        <Route path="/auth/confirm" element={<Confirm />} /> {/* Yechim shu */}
         {/* Protected routes */}
         <Route
           path="dashboard"
