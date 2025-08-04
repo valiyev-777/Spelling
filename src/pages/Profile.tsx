@@ -115,7 +115,7 @@ const Profile = () => {
             </div>
           </div>
           <div className="bg-blue-50 p-3 rounded text-center">
-            <div className="text-lg font-bold text-blue-600">
+            <div className="text-md font-bold text-blue-600">
               {stats.last_practice_at
                 ? new Date(stats.last_practice_at).toLocaleDateString()
                 : "-"}
