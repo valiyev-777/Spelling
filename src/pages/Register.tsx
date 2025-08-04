@@ -11,12 +11,12 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
 
   // Dinamik URL (dev/prod farqlaydi)
-  const getURL = () => {
-    if (typeof window !== "undefined") {
-      return window.location.origin;
-    }
-    return "https://spelling-tau.vercel.app"; // Default prod URL
-  };
+  // const getURL = () => {
+  //   if (typeof window !== "undefined") {
+  //     return window.location.origin;
+  //   }
+  //   return "https://spelling-tau.vercel.app"; // Default prod URL
+  // };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,8 +36,7 @@ const Register = () => {
           email,
           password,
           options: {
-            emailRedirectTo: `${getURL()}/confirm`,
-            data: { nickname }, // Supabase metadata
+            data: { nickname },
           },
         });
 
